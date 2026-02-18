@@ -2,52 +2,143 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CareerGuard - Danilo Laurindo</title>
     
-    <!-- React & ReactDOM (No crossorigin to prevent local file blocking) -->
+    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- Babel for JSX -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f1f5f9; /* slate-100 */
+            overscroll-behavior-y: none; /* Prevents rubber-banding on Mac/iOS */
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Smooth fade transition */
+        .fade-enter { opacity: 0; transform: translateY(10px); }
+        .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+        
+        /* Modal Backdrop Blur */
+        .backdrop-blur-sm { backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
-    <div id="root"></div>
+<body class="h-screen w-screen flex justify-center items-start overflow-hidden text-slate-800">
 
-    <!-- Main Application Script -->
+    <div id="root" class="w-full h-full flex justify-center"></div>
+
     <script type="text/babel" data-presets="react,env">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
-        // --- Icons Data (Defined globally to prevent render issues) ---
-        const ICON_MAP = {
-            Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-            FileText: <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></g>,
-            Clock: <g><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></g>,
-            User: <g><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></g>,
-            Bell: <g><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></g>,
-            Menu: <g><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></g>,
-            CheckCircle: <g><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></g>,
-            Briefcase: <g><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></g>,
-            TrendingUp: <g><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></g>,
-            Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
-            Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>,
-            AlertCircle: <g><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></g>
+        // --- DATA ---
+        
+        const PROFILE = {
+            name: "Danilo Laurindo",
+            role: "Product Manager, Digital Sales",
+            id: "PM-2026-EXP",
+            email: "danilo@example.com", // Placeholder
+            status: "Open to Work"
         };
 
-        const Icon = ({ name, size = 24, className = "" }) => {
+        const EXPERIENCE = [
+            { 
+                id: 1, 
+                title: "Product Manager", 
+                company: "Digital Sales", 
+                date: "Current", 
+                amount: "+Value", 
+                type: "claim",
+                details: "Leading the transition from acquisition-focused strategies to retention-based value models. Implementing 'OneIf' operating model." 
+            },
+            { 
+                id: 2, 
+                title: "Digital Unit Lead", 
+                company: "IBM", 
+                date: "2018-2022", 
+                amount: "+Growth", 
+                type: "claim",
+                details: "Managed a Digital Transformation Unit with 10 direct reports across Europe. Delivered 3 major enterprise platforms." 
+            },
+            { 
+                id: 3, 
+                title: "Agile Coach", 
+                company: "Consultancy", 
+                date: "2015-2018", 
+                amount: "+Speed", 
+                type: "claim",
+                details: "Coached 5 squads on Scrum/Kanban methodologies. Increased delivery velocity by 40% in first 6 months." 
+            },
+        ];
+
+        const SKILLS = [
+            {
+                id: "POL-01",
+                title: "Commercial Strategy",
+                status: "Active",
+                coverage: "100%",
+                icon: "TrendingUp",
+                color: "blue",
+                details: "I don't just build features; I build revenue engines. Deep experience in acquisition funnels, conversion optimization, and CLV modeling."
+            },
+            {
+                id: "POL-02",
+                title: "Technical Execution",
+                status: "Active",
+                coverage: "Full Stack",
+                icon: "Zap",
+                color: "amber",
+                details: "I speak 'Dev' and 'Biz'. Capable of translating complex commercial requirements into actionable technical user stories."
+            },
+            {
+                id: "POL-03",
+                title: "Leadership Foundation",
+                status: "Premium",
+                coverage: "Euro Scope",
+                icon: "User",
+                color: "emerald",
+                details: "Certified leader with experience managing cross-functional, distributed teams. High focus on psychological safety and team autonomy."
+            }
+        ];
+
+        // --- ICONS ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+                FileText: <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></g>,
+                Clock: <g><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></g>,
+                User: <g><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></g>,
+                Bell: <g><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></g>,
+                Menu: <g><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></g>,
+                CheckCircle: <g><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></g>,
+                Briefcase: <g><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></g>,
+                TrendingUp: <g><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></g>,
+                Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
+                Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>,
+                AlertCircle: <g><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></g>,
+                X: <g><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g>,
+                ChevronRight: <polyline points="9 18 15 12 9 6" />
+            };
+
             return (
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -61,346 +152,365 @@
                     strokeLinejoin="round" 
                     className={className}
                 >
-                    {ICON_MAP[name] || <circle cx="12" cy="12" r="10"/>}
+                    {icons[name] || <circle cx="12" cy="12" r="10"/>}
                 </svg>
             );
         };
 
-        // --- Theme & Data ---
-        const theme = {
-            primary: 'bg-blue-700',
-            secondary: 'bg-sky-50',
-            textDark: 'text-slate-800',
-            textLight: 'text-slate-500',
-            success: 'text-emerald-600',
-            accent: 'text-blue-600',
-        };
+        // --- COMPONENTS ---
 
-        const profileData = {
-            name: "Danilo Laurindo",
-            role: "Product Manager, Digital Sales",
-            id: "PM-2026-EXP",
-            status: "Open to Work",
-            riskLevel: "Low",
-            valueProp: "High Impact"
-        };
-
-        const policies = [
-            {
-                id: "POL-01",
-                title: "Commercial Strategy",
-                status: "Active",
-                coverage: "100%",
-                icon: "TrendingUp",
-                iconColor: "text-blue-600",
-                details: "Deep understanding of acquisition engines. PO for Insight Innovators & PI(e) Makers."
-            },
-            {
-                id: "POL-02",
-                title: "Technical Execution",
-                status: "Active",
-                coverage: "Full Stack",
-                icon: "Zap",
-                iconColor: "text-amber-500",
-                details: "Bridging the gap between commercial promises and technical delivery."
-            },
-            {
-                id: "POL-03",
-                title: "Leadership Foundation",
-                status: "Premium",
-                coverage: "European Scope",
-                icon: "User",
-                iconColor: "text-emerald-600",
-                details: "Former IBM Manager. Led Digital Transformation Unit with 10 direct reports."
-            }
-        ];
-
-        const roadmapSteps = [
-            { days: "0-30", title: "Alignment Phase", status: "Pending", desc: "Sync Sales & Service roadmaps. 1-on-1s with Chapter Leads." },
-            { days: "31-60", title: "Risk Assessment", status: "Pending", desc: "Audit AI & Security roadmap. Assess 'Say/Do' ratio of squads." },
-            { days: "61-90", title: "Value Acceleration", status: "Pending", desc: "Deploy Outcome-based OKRs. Present 'Service 2026' vision." }
-        ];
-
-        // --- Sub-Components ---
-
-        const BottomNav = ({ activeTab, setActiveTab }) => {
-            const navItems = [
-                { id: 'home', icon: 'Shield', label: 'Overview' },
-                { id: 'coverage', icon: 'FileText', label: 'Skills' },
-                { id: 'roadmap', icon: 'Clock', label: 'Plan' },
-                { id: 'profile', icon: 'User', label: 'Profile' },
-            ];
-
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            
             return (
-                <div className="bg-white border-t border-slate-200 px-6 py-3 flex justify-between items-center sticky bottom-0 z-50 pb-6">
-                {navItems.map((item) => (
-                    <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`flex flex-col items-center gap-1 transition-colors ${
-                        activeTab === item.id ? 'text-blue-700' : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                    >
-                    <Icon name={item.icon} size={24} />
-                    <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
-                    </button>
-                ))}
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in">
+                    {/* Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        onClick={onClose}
+                    ></div>
+                    
+                    {/* Content */}
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-slate-800">{title}</h3>
+                            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200 text-slate-500">
+                                <Icon name="X" size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            {children}
+                        </div>
+                        <div className="p-4 border-t border-slate-100">
+                            <button onClick={onClose} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl active:scale-[0.98] transition-transform">
+                                Close Details
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         };
 
-        const Header = () => (
-            <div className={`${theme.primary} text-white p-6 pb-12 rounded-b-[2.5rem] shadow-lg relative z-10`}>
-                <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-2">
-                    <Icon name="Shield" className="fill-white/20" />
-                    <span className="font-bold text-lg tracking-tight">CareerGuard™</span>
-                </div>
-                <div className="flex gap-4">
-                    <Icon name="Bell" size={20} className="text-blue-200" />
-                    <Icon name="Menu" size={20} className="text-blue-200" />
-                </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-xl font-bold border-2 border-blue-300 shadow-inner">
-                    DL
-                </div>
-                <div>
-                    <p className="text-blue-200 text-sm">Welcome back,</p>
-                    <h1 className="text-2xl font-bold">Recruiter</h1>
-                </div>
-                </div>
-            </div>
-        );
+        const BottomNav = ({ activeTab, setActiveTab }) => {
+            const navItems = [
+                { id: 'home', icon: 'Shield', label: 'Overview' },
+                { id: 'skills', icon: 'FileText', label: 'Coverage' },
+                { id: 'roadmap', icon: 'Clock', label: 'Roadmap' },
+                { id: 'profile', icon: 'User', label: 'Profile' },
+            ];
 
-        // --- Views ---
-
-        const HomeView = () => (
-            <div className="px-5 -mt-8 relative z-20 pb-20 space-y-6">
-                {/* Stats */}
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between divide-x divide-slate-100">
-                <div className="text-center px-2 flex-1">
-                    <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Risk Level</p>
-                    <p className="text-emerald-600 font-bold flex items-center justify-center gap-1">
-                    <Icon name="CheckCircle" size={14} /> Low
-                    </p>
-                </div>
-                <div className="text-center px-2 flex-1">
-                    <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Value Prop</p>
-                    <p className="text-blue-600 font-bold">High</p>
-                </div>
-                <div className="text-center px-2 flex-1">
-                    <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Availability</p>
-                    <p className="text-slate-700 font-bold">Now</p>
-                </div>
-                </div>
-
-                {/* Banner */}
-                <div className="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl p-5 text-white shadow-md flex items-center justify-between">
-                <div>
-                    <h3 className="font-bold text-lg">Review Application</h3>
-                    <p className="text-blue-100 text-sm opacity-90">Candidate is ready for interview.</p>
-                </div>
-                <button className="bg-white text-blue-600 px-4 py-2 rounded-full text-sm font-bold shadow-sm active:scale-95 transition-transform">
-                    View
-                </button>
-                </div>
-
-                {/* List */}
-                <div>
-                <div className="flex justify-between items-center mb-3 px-1">
-                    <h3 className="font-bold text-slate-800 text-lg">Recent Claims (Experience)</h3>
-                    <span className="text-blue-600 text-sm font-medium">View All</span>
-                </div>
-                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                    {[
-                    { title: "Product Manager", company: "Digital Sales", date: "Current", amount: "+Value" },
-                    { title: "Digital Unit Lead", company: "IBM", date: "2018-2022", amount: "+Growth" },
-                    { title: "Agile Coach", company: "Consultancy", date: "2015-2018", amount: "+Speed" },
-                    ].map((item, i) => (
-                    <div key={i} className="p-4 border-b border-slate-50 last:border-0 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-3">
-                        <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
-                            <Icon name="Briefcase" size={18} />
-                        </div>
-                        <div>
-                            <p className="font-bold text-slate-700 text-sm">{item.title}</p>
-                            <p className="text-slate-400 text-xs">{item.company}</p>
-                        </div>
-                        </div>
-                        <div className="text-right">
-                        <p className="text-emerald-600 font-bold text-sm">{item.amount}</p>
-                        <p className="text-slate-300 text-[10px]">{item.date}</p>
-                        </div>
-                    </div>
+            return (
+                <div className="bg-white border-t border-slate-200 flex justify-between items-center sticky bottom-0 z-40 pb-safe pt-2 px-6 h-[80px] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    {navItems.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`flex flex-col items-center justify-center w-16 h-full gap-1 transition-all duration-200 ${
+                                activeTab === item.id 
+                                ? 'text-blue-600 translate-y-[-2px]' 
+                                : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                        >
+                            <Icon name={item.icon} size={24} className={activeTab === item.id ? "fill-blue-100" : ""} />
+                            <span className="text-[10px] font-semibold tracking-wide">{item.label}</span>
+                        </button>
                     ))}
                 </div>
+            );
+        };
+
+        const Header = ({ title = "CareerGuard™" }) => (
+            <div className="bg-blue-700 text-white p-6 pb-8 rounded-b-[2rem] shadow-lg flex flex-col gap-4 relative z-10 shrink-0">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <Icon name="Shield" className="text-blue-200" />
+                        <span className="font-bold text-lg tracking-tight">{title}</span>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center border border-blue-400">
+                        <Icon name="Bell" size={16} />
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-3 mt-2">
+                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-lg font-bold border border-white/20">
+                        DL
+                    </div>
+                    <div>
+                        <p className="text-blue-200 text-xs font-medium uppercase tracking-wider">Welcome Recruiter</p>
+                        <h1 className="text-xl font-bold">Reviewing Policy</h1>
+                    </div>
                 </div>
             </div>
         );
 
-        const CoverageView = () => (
-            <div className="px-5 pt-6 pb-20 space-y-6">
-                <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-slate-800">Your Coverage</h2>
-                <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">
-                    Active
+        // --- VIEWS ---
+
+        const HomeView = ({ onOpenItem }) => (
+            <div className="p-5 space-y-6 animate-fade-in pb-4">
+                {/* Stats Dashboard */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between divide-x divide-slate-100">
+                    <div className="text-center px-2 flex-1">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Risk</p>
+                        <p className="text-emerald-600 font-bold flex items-center justify-center gap-1 text-sm">
+                            <Icon name="CheckCircle" size={14} /> Low
+                        </p>
+                    </div>
+                    <div className="text-center px-2 flex-1">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Value</p>
+                        <p className="text-blue-600 font-bold text-sm">High</p>
+                    </div>
+                    <div className="text-center px-2 flex-1">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Start</p>
+                        <p className="text-slate-700 font-bold text-sm">ASAP</p>
+                    </div>
                 </div>
+
+                {/* Call To Action */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white shadow-md flex items-center justify-between relative overflow-hidden">
+                    <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                    <div className="relative z-10">
+                        <h3 className="font-bold text-lg">Schedule Interview</h3>
+                        <p className="text-blue-100 text-xs mt-1">Candidate available for screening.</p>
+                    </div>
+                    <button onClick={() => window.location.href = `mailto:${PROFILE.email}`} className="relative z-10 bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-bold shadow-sm active:scale-95 transition-transform">
+                        Contact
+                    </button>
                 </div>
-                <p className="text-slate-500 text-sm">
-                This candidate provides comprehensive coverage across commercial strategy, technical execution, and leadership.
-                </p>
+
+                {/* Experience List */}
+                <div>
+                    <div className="flex justify-between items-center mb-3 px-1">
+                        <h3 className="font-bold text-slate-800 text-base">History (Experience)</h3>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                        {EXPERIENCE.map((item) => (
+                            <button 
+                                key={item.id} 
+                                onClick={() => onOpenItem(item)}
+                                className="p-4 border-b border-slate-50 last:border-0 flex justify-between items-center hover:bg-slate-50 active:bg-blue-50 transition-colors text-left w-full group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600 group-hover:scale-110 transition-transform">
+                                        <Icon name="Briefcase" size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-700 text-sm">{item.title}</p>
+                                        <p className="text-slate-400 text-xs">{item.company}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="text-right">
+                                        <p className="text-emerald-600 font-bold text-sm">{item.amount}</p>
+                                        <p className="text-slate-300 text-[10px]">{item.date}</p>
+                                    </div>
+                                    <Icon name="ChevronRight" size={16} className="text-slate-300" />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const SkillsView = ({ onOpenItem }) => (
+            <div className="p-5 space-y-5 animate-fade-in pb-4">
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h2 className="text-blue-800 font-bold text-lg mb-1">Coverage Status</h2>
+                    <p className="text-blue-600/80 text-sm">
+                        Comprehensive skill coverage across strategy, tech, and leadership domains.
+                    </p>
+                </div>
 
                 <div className="space-y-4">
-                {policies.map((policy) => (
-                    <div key={policy.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-slate-50 to-transparent -mr-4 -mt-4 rounded-full transition-transform group-hover:scale-150" />
-                    
-                    <div className="flex justify-between items-start mb-3 relative z-10">
-                        <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-50 rounded-xl shadow-sm">
-                            <Icon name={policy.icon} size={20} className={policy.iconColor} />
+                    {SKILLS.map((skill) => (
+                        <div 
+                            key={skill.id} 
+                            onClick={() => onOpenItem(skill)}
+                            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2.5 rounded-xl shadow-sm ${
+                                        skill.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                                        skill.color === 'amber' ? 'bg-amber-50 text-amber-600' :
+                                        'bg-emerald-50 text-emerald-600'
+                                    }`}>
+                                        <Icon name={skill.icon} size={20} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800">{skill.title}</h3>
+                                        <p className="text-xs text-slate-400 font-mono">{skill.id}</p>
+                                    </div>
+                                </div>
+                                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                                    skill.status === 'Premium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                                }`}>
+                                    {skill.status}
+                                </span>
+                            </div>
+                            
+                            <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                                {skill.details}
+                            </p>
+                            
+                            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                                <span className="text-xs font-semibold text-slate-400">Policy Limit</span>
+                                <span className="text-sm font-bold text-slate-800">{skill.coverage}</span>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800">{policy.title}</h3>
-                            <p className="text-xs text-slate-400 font-mono">{policy.id}</p>
-                        </div>
-                        </div>
-                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${policy.status === 'Premium' ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
-                        {policy.status}
-                        </span>
-                    </div>
-                    
-                    <p className="text-sm text-slate-600 leading-relaxed mb-4 relative z-10">
-                        {policy.details}
-                    </p>
-                    
-                    <div className="border-t border-slate-50 pt-3 flex justify-between items-center relative z-10">
-                        <span className="text-xs text-slate-400 font-medium">Coverage Limit</span>
-                        <span className="text-sm font-bold text-slate-800">{policy.coverage}</span>
-                    </div>
-                    </div>
-                ))}
-                </div>
-                 <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 flex items-center justify-center gap-2 text-slate-400 cursor-pointer hover:border-blue-300 hover:text-blue-500 transition-colors">
-                    <Icon name="AlertCircle" size={20} />
-                    <span className="font-medium text-sm">View Additional Certifications</span>
+                    ))}
                 </div>
             </div>
         );
 
         const RoadmapView = () => (
-            <div className="px-5 pt-6 pb-20 space-y-6">
-                <h2 className="text-2xl font-bold text-slate-800">Future Claims</h2>
-                <p className="text-slate-500 text-sm">
-                Projected impact schedule for the first 90 days of employment ("The Policy Term").
-                </p>
+            <div className="p-5 animate-fade-in pb-4">
+                <h2 className="text-xl font-bold text-slate-800 mb-2">90-Day Plan</h2>
+                <p className="text-slate-500 text-sm mb-6">Execution strategy upon policy activation (hiring).</p>
 
-                <div className="relative border-l-2 border-blue-100 ml-4 space-y-8 py-2">
-                {roadmapSteps.map((step, idx) => (
-                    <div key={idx} className="relative pl-8">
-                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-sm" />
-                    
-                    <div className="flex flex-col gap-1 mb-2">
-                        <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Day {step.days}</span>
-                        <h3 className="text-lg font-bold text-slate-800">{step.title}</h3>
-                    </div>
-                    
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <p className="text-sm text-slate-600">{step.desc}</p>
-                        <div className="mt-3 flex items-center gap-2">
-                        <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full w-1/3 bg-slate-300 rounded-full"></div>
+                <div className="relative border-l-2 border-blue-100 ml-3 space-y-8 py-1">
+                    {[
+                        { day: "Day 0-30", title: "Alignment", desc: "Sync Sales & Service roadmaps. 1-on-1s with Chapter Leads.", status: "Pending" },
+                        { day: "Day 31-60", title: "Assessment", desc: "Audit AI & Security roadmap. Assess 'Say/Do' ratio of squads.", status: "Locked" },
+                        { day: "Day 61-90", title: "Acceleration", desc: "Deploy Outcome-based OKRs. Present 'Service 2026' vision.", status: "Locked" }
+                    ].map((step, idx) => (
+                        <div key={idx} className="relative pl-8 group">
+                            <div className={`absolute -left-[9px] top-0 w-4 h-4 rounded-full border-4 border-white shadow-sm transition-colors ${
+                                idx === 0 ? 'bg-blue-600 scale-110' : 'bg-slate-200'
+                            }`}></div>
+                            
+                            <div className="flex flex-col gap-1 mb-2">
+                                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{step.day}</span>
+                                <h3 className="text-base font-bold text-slate-800">{step.title}</h3>
+                            </div>
+                            
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm group-hover:border-blue-200 transition-colors">
+                                <p className="text-sm text-slate-600 leading-relaxed">{step.desc}</p>
+                            </div>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">{step.status}</span>
-                        </div>
-                    </div>
-                    </div>
-                ))}
+                    ))}
                 </div>
             </div>
         );
 
         const ProfileView = () => (
-            <div className="px-5 pt-6 pb-20">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 text-center mb-6">
-                <div className="w-24 h-24 bg-slate-100 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl shadow-inner text-slate-300">
-                    <Icon name="User" size={40} />
-                </div>
-                <h2 className="text-xl font-bold text-slate-800">{profileData.name}</h2>
-                <p className="text-blue-600 font-medium text-sm mb-4">{profileData.role}</p>
-                
-                <div className="grid grid-cols-2 gap-4 text-left">
-                    <div className="bg-slate-50 p-3 rounded-xl">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">ID Number</p>
-                    <p className="text-sm font-mono text-slate-700">{profileData.id}</p>
+            <div className="p-5 animate-fade-in flex flex-col items-center pb-4">
+                <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col items-center text-center mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 w-full h-24 bg-gradient-to-b from-blue-50 to-white z-0"></div>
+                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl shadow-md border-4 border-white text-slate-300 relative z-10 mb-4">
+                        <Icon name="User" size={40} className="text-blue-500" />
                     </div>
-                    <div className="bg-slate-50 p-3 rounded-xl">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">Status</p>
-                    <p className="text-sm font-medium text-emerald-600 flex items-center gap-1">
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                        {profileData.status}
-                    </p>
+                    <h2 className="text-xl font-bold text-slate-800 relative z-10">{PROFILE.name}</h2>
+                    <p className="text-blue-600 font-medium text-sm mb-6 relative z-10">{PROFILE.role}</p>
+                    
+                    <div className="w-full grid grid-cols-2 gap-3">
+                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Experience</p>
+                            <p className="text-sm font-semibold text-slate-700">8+ Years</p>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">Status</p>
+                            <p className="text-sm font-semibold text-emerald-600">Available</p>
+                        </div>
                     </div>
-                </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-800 mb-3">Support & Actions</h3>
-                <div className="space-y-3">
-                <button className="w-full bg-blue-600 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-200 active:scale-95 transition-transform">
-                    <Icon name="Briefcase" size={20} />
-                    Extend Job Offer
-                </button>
-                <button className="w-full bg-white text-slate-700 border border-slate-200 p-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
-                    <Icon name="Phone" size={20} />
-                    Contact Candidate
-                </button>
+                <div className="w-full space-y-3">
+                    <button 
+                        onClick={() => window.location.href = `mailto:${PROFILE.email}?subject=Job Offer for Danilo`}
+                        className="w-full bg-blue-600 text-white p-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform"
+                    >
+                        <Icon name="Briefcase" size={20} />
+                        Extend Job Offer
+                    </button>
+                    <button 
+                        onClick={() => window.location.href = `mailto:${PROFILE.email}`}
+                        className="w-full bg-white text-slate-700 border border-slate-200 p-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 active:scale-[0.98] transition-all"
+                    >
+                        <Icon name="Phone" size={20} />
+                        Contact Candidate
+                    </button>
                 </div>
                 
-                <div className="mt-8 text-center">
-                <p className="text-xs text-slate-300">
-                    © 2026 CareerGuard Inc. <br/>
-                    Policy terms subject to contract negotiation.
+                <p className="mt-8 text-xs text-slate-400 text-center">
+                    App Version 2.1.0 (Stable)<br/>
+                    © 2026 CareerGuard Inc.
                 </p>
-                </div>
             </div>
         );
 
+        // --- MAIN APP ---
+
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
+            const [selectedItem, setSelectedItem] = useState(null);
+
+            // Close modal when switching tabs
+            useEffect(() => {
+                setSelectedItem(null);
+            }, [activeTab]);
 
             const renderContent = () => {
                 switch(activeTab) {
-                    case 'home': return <HomeView />;
-                    case 'coverage': return <CoverageView />;
+                    case 'home': return <HomeView onOpenItem={setSelectedItem} />;
+                    case 'skills': return <SkillsView onOpenItem={setSelectedItem} />;
                     case 'roadmap': return <RoadmapView />;
                     case 'profile': return <ProfileView />;
-                    default: return <HomeView />;
+                    default: return <HomeView onOpenItem={setSelectedItem} />;
                 }
             };
 
             return (
-                <div className="min-h-screen bg-slate-50 flex justify-center font-sans">
-                    <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col">
-                        {activeTab !== 'profile' && <Header />}
-                        <div className="flex-grow bg-slate-50 overflow-y-auto custom-scrollbar">
-                            {renderContent()}
-                        </div>
-                        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+                <div className="w-full h-full max-w-md bg-white shadow-2xl relative flex flex-col overflow-hidden sm:rounded-xl sm:h-[90vh] sm:border sm:border-slate-200">
+                    
+                    {/* Dynamic Header */}
+                    {activeTab !== 'profile' && <Header />}
+
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth bg-slate-50/50">
+                        {renderContent()}
                     </div>
+
+                    {/* Fixed Bottom Nav */}
+                    <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+
+                    {/* Detail Modal */}
+                    <Modal 
+                        isOpen={!!selectedItem} 
+                        onClose={() => setSelectedItem(null)}
+                        title={selectedItem?.type === 'claim' ? 'Experience Detail' : 'Coverage Detail'}
+                    >
+                        {selectedItem && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+                                        <Icon name={selectedItem.icon || "Briefcase"} size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-lg text-slate-800">{selectedItem.title}</h4>
+                                        <p className="text-slate-500">{selectedItem.company || selectedItem.id}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    <p className="text-slate-700 leading-relaxed text-sm">
+                                        {selectedItem.details}
+                                    </p>
+                                </div>
+                                {selectedItem.amount && (
+                                    <div className="flex justify-between items-center pt-2">
+                                        <span className="text-xs font-bold text-slate-400 uppercase">Impact Metric</span>
+                                        <span className="text-emerald-600 font-bold bg-emerald-50 px-3 py-1 rounded-full">{selectedItem.amount}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </Modal>
                 </div>
             );
         };
 
-        // Render with error handling
-        try {
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<App />);
-        } catch (error) {
-            document.body.innerHTML = `<div style="padding: 20px; color: red;"><h3>Application Error</h3><p>${error.message}</p></div>`;
-            console.error(error);
-        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
